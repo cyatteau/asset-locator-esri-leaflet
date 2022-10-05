@@ -1,0 +1,14 @@
+#map {
+  width: 50%;
+  height: 60vh;
+  margin: 30px auto;
+}
+
+.list-item {
+  max-width: 250px;
+}
+
+h2 {
+  margin-bottom: 30px;
+  text-align: center;
+}
