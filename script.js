@@ -10,8 +10,7 @@ let view = 13;
 const map = L.map(mapContainer).setView([lat, long], view);
 
 //Esri Vector Basemap
-const apiKey =
-  "AAPKa4e4653c878b45f0b017af802c0529ccoO7JJY3hk5xerpRwKLMgoSGwKh1UBMAuU-74cQwQVPnR_-3WDxV8uT-LSe0bK6Xp";
+const apiKey = "<YOUR_API_KEY>";
 const authentication = arcgisRest.ApiKeyManager.fromKey(apiKey);
 
 const basemapEnum = "e16f851bdec647edba0498e186a5329c";
@@ -24,12 +23,10 @@ let magicKey =
 geocodeStuff(magicKey);
 
 searchInput.addEventListener("keyup", (e) => {
-  console.log(e.target.value);
   const input = searchInput.value;
   view = 13;
   queryResults(input);
 });
-
 
 //arcGIS REST JS Auto Suggest
 function queryResults(query) {
@@ -81,8 +78,6 @@ function geocodeStuff(magicKey) {
       authentication,
     })
     .then((res) => {
-      console.log(res.candidates[0].location.x); //longitude of picked result
-      console.log(res.candidates[0].location.y); //latitude of picked result
       longitude = res.candidates[0].location.x.toString();
       latitude = res.candidates[0].location.y.toString();
       long = res.candidates[0].location.x;
@@ -126,7 +121,13 @@ function showLocations(res) {
       map.setView(position, 13);
     });
     const position = new L.LatLng(result.location.y, result.location.x);
-    currentMarkers.push(new L.marker(position).addTo(map));
+    currentMarkers.push(
+      new L.marker(position).addTo(map).bindTooltip(() => {
+        return L.Util.template(
+          `<b>Name: </b>${result.address}<br/><b>Address: </b>${result.attributes.Place_addr}`
+        );
+      })
+    );
     resultList.appendChild(li);
   }
 }
