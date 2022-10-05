@@ -3,14 +3,19 @@ const resultList = document.getElementById("result-list");
 const suggestions = document.getElementById("suggestions");
 const mapContainer = document.getElementById("map-container");
 const currentMarkers = [];
+const container = document.querySelector(".page");
+let longitude = "";
+let latitude = "";
 let lat = 54.526;
 let long = 15.2551;
 let view = 13;
 
+//create Leaflet map container
 const map = L.map(mapContainer).setView([lat, long], view);
 
 //Esri Vector Basemap
-const apiKey = "<YOUR_API_KEY>";
+const apiKey =
+  "YOUR_API_KEY";
 const authentication = arcgisRest.ApiKeyManager.fromKey(apiKey);
 
 const basemapEnum = "e16f851bdec647edba0498e186a5329c";
@@ -18,13 +23,21 @@ L.esri.Vector.vectorBasemapLayer(basemapEnum, {
   apiKey: apiKey,
 }).addTo(map);
 
+//sets initial view
 let magicKey =
   "dHA9MCNsb2M9MjAyNjE5NTYjbG5nPTQ2I3BsPTExOTkyNTczI2xicz0xNDo4Mzk5NDAw";
 geocodeStuff(magicKey);
 
+//closes suggestions on out-click
+container.addEventListener("click", () => {
+  while (suggestions.firstChild) {
+    suggestions.removeChild(suggestions.firstChild);
+  }
+});
+
+//triggers suggestions on input
 searchInput.addEventListener("keyup", (e) => {
   const input = searchInput.value;
-  view = 13;
   queryResults(input);
 });
 
@@ -64,9 +77,6 @@ function queryResults(query) {
       console.error(`ERROR! ${error}`);
     });
 }
-
-let longitude = "";
-let latitude = "";
 
 function geocodeStuff(magicKey) {
   while (suggestions.firstChild) {

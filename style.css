@@ -1,7 +1,6 @@
-#map {
-  width: 50%;
-  height: 60vh;
-  margin: 30px auto;
+
+#map-container {
+  height: 75vh;
 }
 
 .list-item {
@@ -11,4 +10,24 @@
 h2 {
   margin-bottom: 30px;
   text-align: center;
+}
+
+#suggestions {
+  width: 50%;
+  margin: 0 auto;
+}
+
+.search-form {
+  margin-left: -13px;
+  text-align: center;
+}
+
+#search {
+  width: 350px;
+  padding: 7px 5px;
+}
+
+.api-key {
+  width: 350px;
+  padding: 7px 5px;
 }
