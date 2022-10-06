@@ -1,152 +1,86 @@
-const searchInput = document.getElementById("search");
 const resultList = document.getElementById("result-list");
-const suggestions = document.getElementById("suggestions");
 const mapContainer = document.getElementById("map-container");
-const background = document.querySelector(".wrapper");
-const currentMarkers = [];
-const container = document.querySelector(".page");
-let longitude = "";
-let latitude = "";
-let lat = 54.526;
-let long = 15.2551;
+let lat = 37.7749;
+let long = -122.4194;
 let view = 13;
 
 //create Leaflet map container
 const map = L.map(mapContainer).setView([lat, long], view);
 
-//Esri Vector Basemap
 const apiKey = "<YOUR_API_KEY>";
-const authentication = arcgisRest.ApiKeyManager.fromKey(apiKey);
-
+//custom vector basemap layer
 const basemapEnum = "e16f851bdec647edba0498e186a5329c";
 L.esri.Vector.vectorBasemapLayer(basemapEnum, {
   apiKey: apiKey,
 }).addTo(map);
 
-//sets initial view
-let magicKey =
-  "dHA9MCNsb2M9MjAyNjE5NTYjbG5nPTQ2I3BsPTExOTkyNTczI2xicz0xNDo4Mzk5NDAw";
-geocodeStuff(magicKey);
+const searchControl = L.esri.Geocoding.geosearch({
+  position: "topright",
+  placeholder: "Enter an address, city, or zip code",
+  useMapBounds: false,
+  providers: [
+    L.esri.Geocoding.arcgisOnlineProvider({
+      apikey: apiKey,
+      nearby: {
+        lat: 37.7749,
+        lng: -122.4194,
+      },
+    }),
+  ],
+}).addTo(map);
 
-//closes suggestions on out-click
-container.addEventListener("click", () => {
-  while (suggestions.firstChild) {
-    suggestions.removeChild(suggestions.firstChild);
+const results = L.layerGroup().addTo(map);
+searchControl.on("results", (data) => {
+  results.clearLayers();
+  for (let i = data.results.length - 1; i >= 0; i--) {
+    const marker = L.marker(data.results[i].latlng);
+    const lat = data.results[i].latlng.lat;
+    const long = data.results[i].latlng.lng;
+    map.setView(new L.LatLng(lat, long), 10);
+    console.log(data.results);
   }
+  while (resultList.firstChild) {
+    resultList.removeChild(resultList.firstChild);
+  }
+  showPlaces();
 });
 
-//triggers suggestions on input
-searchInput.addEventListener("keyup", (e) => {
-  const input = searchInput.value;
-  mapContainer.classList.add("behind");
-  queryResults(input);
-});
+const layerGroup = L.layerGroup().addTo(map);
 
-//arcGIS REST JS Auto Suggest
-function queryResults(query) {
-  console.log(query.length);
-  arcgisRest
-    .suggest(query, { params: { maxSuggestions: 5 }, authentication })
-    .then((response) => {
-      let res = response.suggestions;
-      let stuff = [];
-      stuff.length > 5
-        ? () => {
-            stuff.length = 0;
-            stuff.push(res);
+function showPlaces() {
+  L.esri.Geocoding.geocode({
+    apikey: apiKey,
+  })
+    .category("Post Office")
+    .nearby(map.getCenter(), 10)
+    .run(function (err, response) {
+      layerGroup.clearLayers();
+      response.results.forEach((searchResult) => {
+        const li = document.createElement("li");
+        li.classList.add("list-group-item", "list-group-item-action");
+        li.innerHTML = searchResult.properties.Place_addr;
+        console.log(searchResult.properties.X);
+        const latiLongi = {
+          lat: searchResult.properties.Y,
+          lon: searchResult.properties.X,
+        };
+        resultList.appendChild(li);
+        li.addEventListener("click", (event) => {
+          for (const child of resultList.children) {
+            child.classList.remove("active");
           }
-        : stuff.push(res);
-      if (query.length >= 1) {
-        for (const sugg of stuff[0]) {
-          const sli = document.createElement("li");
-          const key = sugg.magicKey;
-          sli.classList.add("list-group-item", "list-group-item-action");
-          sli.innerHTML = sugg.text;
-          suggestions.appendChild(sli);
-          if (suggestions.childElementCount > 5) {
-            suggestions.removeChild(suggestions.firstChild);
-          }
-          sli.addEventListener("click", (event) => {
-            for (const child of suggestions.children) {
-              child.classList.remove("active");
-            }
-            event.target.classList.add("active");
-            searchInput.value = sugg.text;
-            geocodeStuff(key);
-          });
-        }
-      } else {
-        while (suggestions.firstChild) {
-          suggestions.removeChild(suggestions.firstChild);
-        }
-      }
-    })
-    .catch((error) => {
-      console.error(`ERROR! ${error}`);
-    });
-}
-
-function geocodeStuff(magicKey) {
-  mapContainer.classList.remove("behind");
-  while (suggestions.firstChild) {
-    suggestions.removeChild(suggestions.firstChild);
-  }
-  arcgisRest
-    .geocode({
-      magicKey,
-      authentication,
-    })
-    .then((res) => {
-      longitude = res.candidates[0].location.x.toString();
-      latitude = res.candidates[0].location.y.toString();
-      long = res.candidates[0].location.x;
-      lat = res.candidates[0].location.y;
-    })
-    .then(() => {
-      arcgisRest
-        .geocode({
-          params: {
-            category: "Post Office",
-            location: `${long}, ${lat}`,
-          },
-          outFields: "*",
-          authentication,
-        })
-        .then((res) => {
-          console.log(res);
-          showLocations(res.candidates);
+          event.target.classList.add("active");
+          const clickedData = latiLongi;
+          const position = new L.LatLng(clickedData.lat, clickedData.lon);
+          map.setView(position, 13);
         });
-    });
-}
 
-function showLocations(res) {
-  resultList.innerHTML = "";
-  for (const marker of currentMarkers) {
-    map.removeLayer(marker);
-  }
-  map.setView(new L.LatLng(lat, long), view);
-  for (const result of res) {
-    const li = document.createElement("li");
-    li.classList.add("list-group-item", "list-group-item-action");
-    const latiLongi = { lat: result.location.y, lon: result.location.x };
-    li.innerHTML = result.attributes.Place_addr;
-    li.addEventListener("click", (event) => {
-      for (const child of resultList.children) {
-        child.classList.remove("active");
-      }
-      event.target.classList.add("active");
-      const clickedData = latiLongi;
-      const position = new L.LatLng(clickedData.lat, clickedData.lon);
-      map.setView(position, 13);
+        L.marker(searchResult.latlng)
+          .addTo(layerGroup)
+          .bindPopup(
+            `<b>${searchResult.properties.PlaceName}</b></br>${searchResult.properties.Place_addr}`
+          );
+      });
     });
-    const position = new L.LatLng(result.location.y, result.location.x);
-    currentMarkers.push(
-      new L.marker(position).addTo(map).bindTooltip(() => {
-        return L.Util.template(
-          `<b>Name: </b>${result.address}<br/><b>Address: </b>${result.attributes.Place_addr}`
-        );
-      })
-    );
-    resultList.appendChild(li);
-  }
 }
+showPlaces();
