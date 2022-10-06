@@ -8,8 +8,7 @@ let view = 13;
 const map = L.map(mapContainer).setView([lat, long], view);
 
 //CUSTOM vector basemap layer
-const apiKey =
-  "AAPK61700f25b759464a88c2486f1de24bdcWsQhhRoMLrIcXQoV2NcdFoBVZdLoINwi5LhCWTDff0Eim-kSJoGNeA_c2jSTGeu7";
+const apiKey = "YOUR_API_KEY";
 const basemapEnum = "e16f851bdec647edba0498e186a5329c";
 L.esri.Vector.vectorBasemapLayer(basemapEnum, {
   apiKey: apiKey,
