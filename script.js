@@ -7,13 +7,15 @@ let view = 13;
 //create Leaflet map container
 const map = L.map(mapContainer).setView([lat, long], view);
 
-const apiKey = "<YOUR_API_KEY>";
-//custom vector basemap layer
+//CUSTOM vector basemap layer
+const apiKey =
+  "AAPK61700f25b759464a88c2486f1de24bdcWsQhhRoMLrIcXQoV2NcdFoBVZdLoINwi5LhCWTDff0Eim-kSJoGNeA_c2jSTGeu7";
 const basemapEnum = "e16f851bdec647edba0498e186a5329c";
 L.esri.Vector.vectorBasemapLayer(basemapEnum, {
   apiKey: apiKey,
 }).addTo(map);
 
+//search field
 const searchControl = L.esri.Geocoding.geosearch({
   position: "topright",
   placeholder: "Enter an address, city, or zip code",
@@ -29,11 +31,11 @@ const searchControl = L.esri.Geocoding.geosearch({
   ],
 }).addTo(map);
 
+//handle search SUGGESTIONS
 const results = L.layerGroup().addTo(map);
 searchControl.on("results", (data) => {
   results.clearLayers();
   for (let i = data.results.length - 1; i >= 0; i--) {
-    const marker = L.marker(data.results[i].latlng);
     const lat = data.results[i].latlng.lat;
     const long = data.results[i].latlng.lng;
     map.setView(new L.LatLng(lat, long), 10);
@@ -46,7 +48,10 @@ searchControl.on("results", (data) => {
 });
 
 const layerGroup = L.layerGroup().addTo(map);
+const clickedLayerGroup = L.layerGroup().addTo(map);
+let clickedData = {};
 
+//handle getting results
 function showPlaces() {
   L.esri.Geocoding.geocode({
     apikey: apiKey,
@@ -55,31 +60,49 @@ function showPlaces() {
     .nearby(map.getCenter(), 10)
     .run(function (err, response) {
       layerGroup.clearLayers();
-      response.results.forEach((searchResult) => {
-        const li = document.createElement("li");
-        li.classList.add("list-group-item", "list-group-item-action");
-        li.innerHTML = searchResult.properties.Place_addr;
-        console.log(searchResult.properties.X);
-        const latiLongi = {
-          lat: searchResult.properties.Y,
-          lon: searchResult.properties.X,
-        };
-        resultList.appendChild(li);
-        li.addEventListener("click", (event) => {
-          for (const child of resultList.children) {
-            child.classList.remove("active");
-          }
-          event.target.classList.add("active");
-          const clickedData = latiLongi;
-          const position = new L.LatLng(clickedData.lat, clickedData.lon);
-          map.setView(position, 13);
-        });
 
+      response.results.forEach((searchResult) => {
+        //placing markers at locations
         L.marker(searchResult.latlng)
           .addTo(layerGroup)
           .bindPopup(
             `<b>${searchResult.properties.PlaceName}</b></br>${searchResult.properties.Place_addr}`
           );
+
+        //handle list of places on left
+        const li = document.createElement("li");
+        li.classList.add("list-group-item", "list-group-item-action");
+        li.innerHTML = searchResult.properties.Place_addr;
+        const latiLongi = {
+          lat: searchResult.properties.Y,
+          lon: searchResult.properties.X,
+        };
+        resultList.appendChild(li);
+
+        //create special icon
+        const clickedIcon = L.icon({
+          iconUrl: "picked-color.png",
+          iconSize: [38, 75],
+          iconAnchor: clickedData.latiLongi,
+          popupAnchor: [0, -30],
+        });
+
+        //handling map movement & special icon on location click from list
+        li.addEventListener("click", (event) => {
+          clickedLayerGroup.clearLayers();
+          for (const child of resultList.children) {
+            child.classList.remove("active");
+          }
+          event.target.classList.add("active");
+          clickedData = latiLongi;
+          const position = new L.LatLng(clickedData.lat, clickedData.lon);
+          map.setView(position, 13);
+          L.marker(position, { icon: clickedIcon })
+            .addTo(clickedLayerGroup)
+            .bindPopup(
+              `<b>${searchResult.properties.PlaceName}</b></br>${searchResult.properties.Place_addr}`
+            );
+        });
       });
     });
 }
