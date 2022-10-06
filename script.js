@@ -2,6 +2,7 @@ const searchInput = document.getElementById("search");
 const resultList = document.getElementById("result-list");
 const suggestions = document.getElementById("suggestions");
 const mapContainer = document.getElementById("map-container");
+const background = document.querySelector(".wrapper");
 const currentMarkers = [];
 const container = document.querySelector(".page");
 let longitude = "";
@@ -14,8 +15,7 @@ let view = 13;
 const map = L.map(mapContainer).setView([lat, long], view);
 
 //Esri Vector Basemap
-const apiKey =
-  "YOUR_API_KEY";
+const apiKey = "<YOUR_API_KEY>";
 const authentication = arcgisRest.ApiKeyManager.fromKey(apiKey);
 
 const basemapEnum = "e16f851bdec647edba0498e186a5329c";
@@ -38,11 +38,13 @@ container.addEventListener("click", () => {
 //triggers suggestions on input
 searchInput.addEventListener("keyup", (e) => {
   const input = searchInput.value;
+  mapContainer.classList.add("behind");
   queryResults(input);
 });
 
 //arcGIS REST JS Auto Suggest
 function queryResults(query) {
+  console.log(query.length);
   arcgisRest
     .suggest(query, { params: { maxSuggestions: 5 }, authentication })
     .then((response) => {
@@ -54,23 +56,29 @@ function queryResults(query) {
             stuff.push(res);
           }
         : stuff.push(res);
-      for (const sugg of stuff[0]) {
-        const sli = document.createElement("li");
-        const key = sugg.magicKey;
-        sli.classList.add("list-group-item", "list-group-item-action");
-        sli.innerHTML = sugg.text;
-        suggestions.appendChild(sli);
-        if (suggestions.childElementCount > 5) {
+      if (query.length >= 1) {
+        for (const sugg of stuff[0]) {
+          const sli = document.createElement("li");
+          const key = sugg.magicKey;
+          sli.classList.add("list-group-item", "list-group-item-action");
+          sli.innerHTML = sugg.text;
+          suggestions.appendChild(sli);
+          if (suggestions.childElementCount > 5) {
+            suggestions.removeChild(suggestions.firstChild);
+          }
+          sli.addEventListener("click", (event) => {
+            for (const child of suggestions.children) {
+              child.classList.remove("active");
+            }
+            event.target.classList.add("active");
+            searchInput.value = sugg.text;
+            geocodeStuff(key);
+          });
+        }
+      } else {
+        while (suggestions.firstChild) {
           suggestions.removeChild(suggestions.firstChild);
         }
-        sli.addEventListener("click", (event) => {
-          for (const child of suggestions.children) {
-            child.classList.remove("active");
-          }
-          event.target.classList.add("active");
-          searchInput.value = sugg.text;
-          geocodeStuff(key);
-        });
       }
     })
     .catch((error) => {
@@ -79,6 +87,7 @@ function queryResults(query) {
 }
 
 function geocodeStuff(magicKey) {
+  mapContainer.classList.remove("behind");
   while (suggestions.firstChild) {
     suggestions.removeChild(suggestions.firstChild);
   }

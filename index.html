@@ -20,8 +20,7 @@
     <title>Asset Locator App</title>
   </head>
   <body class="page container mt-3">
-    <div>
-      <form class="mb-3"><input type="text" placeholder="Please enter your API Key" class="api-key"/></form>
+    <div class="wrapper">
       <h2>Nearby Post Office</h2>
       <form autocomplete="off" class="search-form">
         <input
@@ -30,11 +29,12 @@
           placeholder="Please enter address, city, or zip code"
         />
         <ul id="suggestions"></ul>
+
       </form>
       <div class="row mt-5">
         <ul id="result-list" class="col-sm-4"></ul>
         <div class="col-sm-8">
-          <div id="map-container"></div>
+          <div id="map-container" style="height: 75vh"></div>
         </div>
       </div>
     </div>
@@ -58,6 +58,5 @@
     <script src="https://unpkg.com/esri-leaflet@^3.0.8/dist/esri-leaflet.js"></script>
     <script src="https://unpkg.com/esri-leaflet-vector@4.0.0/dist/esri-leaflet-vector.js"></script>
     <script src="./script.js"></script>
-    <script type="text/javascript" src="config.js"></script>
   </body>
 </html>

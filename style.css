@@ -1,6 +1,11 @@
 
 #map-container {
   height: 75vh;
+  position: relative;
+}
+
+.behind {
+  z-index: -1;
 }
 
 .list-item {
@@ -13,12 +18,20 @@ h2 {
 }
 
 #suggestions {
-  width: 50%;
+  width: 100%;
   margin: 0 auto;
+  position: absolute;
+  z-index: 2;
+  text-align: center;
+}
+
+.list-group-item {
+  background-color: white;
+  list-style: none;
+  margin-left: -15px;
 }
 
 .search-form {
-  margin-left: -13px;
   text-align: center;
 }
 
@@ -30,4 +43,8 @@ h2 {
 .api-key {
   width: 350px;
   padding: 7px 5px;
+}
+
+.wrapper {
+  position: relative;
 }
