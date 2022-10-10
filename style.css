@@ -1,38 +1,17 @@
-
 #map-container {
-  height: 75vh;
-  position: relative;
+  height: 100vh;
 }
 
-.behind {
-  z-index: -1;
+body {
+  margin: 0;
+  padding: 0;
 }
 
-.list-item {
-  max-width: 250px;
-}
-
-h2 {
-  margin-bottom: 30px;
+.heading {
   text-align: center;
-}
-
-#suggestions {
-  width: 100%;
-  margin: 0 auto;
-  position: absolute;
-  z-index: 2;
-  text-align: center;
-}
-
-.list-group-item {
-  background-color: white;
-  list-style: none;
-  margin-left: -15px;
-}
-
-.search-form {
-  text-align: center;
+  background-color: rgb(36, 179, 131);
+  margin: 0;
+  padding: 20px;
 }
 
 #search {
@@ -40,11 +19,24 @@ h2 {
   padding: 7px 5px;
 }
 
-.api-key {
-  width: 350px;
-  padding: 7px 5px;
+.search-form {
+  text-align: center;
 }
 
-.wrapper {
-  position: relative;
+#result-list {
+  position: absolute;
+  top: 100px;
+  z-index: 999;
+  left: 60px;
+  max-width: 330px;
+  overflow: scroll;
+  max-height: 85%;
+}
+
+@media screen and (max-width: 1000px) {
+  #result-list {
+    max-width: 200px;
+    max-height: 30%;
+    top: 130px;
+  }
 }

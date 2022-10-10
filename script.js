@@ -8,36 +8,33 @@ let view = 13;
 const map = L.map(mapContainer).setView([lat, long], view);
 
 //CUSTOM vector basemap layer
-const apiKey = "YOUR_API_KEY";
+const apiKey =
+  "YOUR_API_KEY";
 const basemapEnum = "e16f851bdec647edba0498e186a5329c";
 L.esri.Vector.vectorBasemapLayer(basemapEnum, {
   apiKey: apiKey,
 }).addTo(map);
 
 //search field
-const searchControl = L.esri.Geocoding.geosearch({
+const searchInput = L.esri.Geocoding.geosearch({
   position: "topright",
   placeholder: "Enter an address, city, or zip code",
   useMapBounds: false,
   providers: [
     L.esri.Geocoding.arcgisOnlineProvider({
       apikey: apiKey,
-      nearby: {
-        lat: 37.7749,
-        lng: -122.4194,
-      },
     }),
   ],
 }).addTo(map);
 
-//handle search SUGGESTIONS
+//handle getting search SUGGESTIONS
 const results = L.layerGroup().addTo(map);
-searchControl.on("results", (data) => {
+searchInput.on("results", (data) => {
   results.clearLayers();
   for (let i = data.results.length - 1; i >= 0; i--) {
     const lat = data.results[i].latlng.lat;
     const long = data.results[i].latlng.lng;
-    map.setView(new L.LatLng(lat, long), 10);
+    map.setView(new L.LatLng(lat, long), 13);
     console.log(data.results);
   }
   while (resultList.firstChild) {
@@ -46,9 +43,9 @@ searchControl.on("results", (data) => {
   showPlaces();
 });
 
-const layerGroup = L.layerGroup().addTo(map);
 const clickedLayerGroup = L.layerGroup().addTo(map);
 let clickedData = {};
+const currentMarkers = [];
 
 //handle getting results
 function showPlaces() {
@@ -56,34 +53,35 @@ function showPlaces() {
     apikey: apiKey,
   })
     .category("Post Office")
-    .nearby(map.getCenter(), 10)
+    .nearby(map.getCenter(), 13)
     .run(function (err, response) {
-      layerGroup.clearLayers();
 
-      response.results.forEach((searchResult) => {
-        //placing markers at locations
-        L.marker(searchResult.latlng)
-          .addTo(layerGroup)
-          .bindPopup(
-            `<b>${searchResult.properties.PlaceName}</b></br>${searchResult.properties.Place_addr}`
-          );
+      //placing markers at locations
+      for (const result of response.results) {
+        const position = new L.LatLng(result.latlng.lat, result.latlng.lng);
+        currentMarkers.push(
+          new L.marker(position).addTo(map).bindTooltip(() => {
+            return L.Util.template(
+              `<b>${result.properties.PlaceName}</b></br>${result.properties.Place_addr}`
+            );
+          })
+        );
 
         //handle list of places on left
         const li = document.createElement("li");
         li.classList.add("list-group-item", "list-group-item-action");
-        li.innerHTML = searchResult.properties.Place_addr;
+        li.innerHTML = result.properties.Place_addr;
         const latiLongi = {
-          lat: searchResult.properties.Y,
-          lon: searchResult.properties.X,
+          lat: result.properties.Y,
+          lon: result.properties.X,
         };
         resultList.appendChild(li);
 
         //create special icon
         const clickedIcon = L.icon({
           iconUrl: "picked-color.png",
-          iconSize: [38, 75],
-          iconAnchor: clickedData.latiLongi,
-          popupAnchor: [0, -30],
+          iconSize: [50, 78],
+          popupAnchor: [-5, -20],
         });
 
         //handling map movement & special icon on location click from list
@@ -96,13 +94,16 @@ function showPlaces() {
           clickedData = latiLongi;
           const position = new L.LatLng(clickedData.lat, clickedData.lon);
           map.setView(position, 13);
+
           L.marker(position, { icon: clickedIcon })
             .addTo(clickedLayerGroup)
-            .bindPopup(
-              `<b>${searchResult.properties.PlaceName}</b></br>${searchResult.properties.Place_addr}`
-            );
+            .bindTooltip(() => {
+              return L.Util.template(
+                `<b>${result.properties.PlaceName}</b></br>${result.properties.Place_addr}`
+              );
+            });
         });
-      });
+      }
     });
 }
 showPlaces();
